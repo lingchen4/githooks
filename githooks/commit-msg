@@ -1,0 +1,8 @@
+#!/bin/bash
+
+commit_msg=$(cat $1)
+
+if [[ ! $commit_msg =~ ^(chore|feat|fix) ]]; then
+    echo "Commit message must start with 'chore/feat/fix/refactor'"
+    exit 1
+fi

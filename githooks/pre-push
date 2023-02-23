@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Run Maven clean and test before every push
+mvn clean test
+
+# If the Maven build failed, prevent the push
+if [ $? -ne 0 ]; then
+  echo "Maven build failed, push aborted"
+  exit 1
+fi
+
+# Run Checkstyle
+mvn checkstyle:check
+
+# If the Checkstyle check failed, prevent the push
+if [ $? -ne 0 ]; then
+  echo "Checkstyle check failed, push aborted"
+  exit 1
+fi
