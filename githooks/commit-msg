@@ -2,7 +2,7 @@
 
 commit_msg=$(cat $1)
 
-if [[ ! $commit_msg =~ ^(chore|feat|fix) ]]; then
-    echo "Commit message must start with 'chore/feat/fix/refactor'"
+if [[ ! $commit_msg =~ ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test) ]]; then
+    echo "Commit message must start with 'build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'"
     exit 1
 fi
