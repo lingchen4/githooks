@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if the project is a Maven project
+if [ ! -f pom.xml ]; then
+  echo "This is not a Maven project, skipping pre-push checks"
+  exit 0
+fi
+
 # Run Maven clean and test before every push
 mvn clean test
 
