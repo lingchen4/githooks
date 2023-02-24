@@ -3,6 +3,8 @@ name: PR Reminder
 on:
   schedule:
     - cron: '0 9 * * *' # Run every day at 9am
+    
+  workflow_dispatch:
 
 jobs:
   remind:
