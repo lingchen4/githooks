@@ -18,7 +18,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2.2.1
       if: steps.get_prs.outputs.prs != ''
       with:
-        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        slack_webhook: ${{ https://hooks.slack.com/services/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 }}
         message: |
           The following PRs have been open for over a day:
           ${{ steps.get_prs.outputs.prs }}
