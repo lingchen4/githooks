@@ -1,39 +1,8 @@
-# name: PR Reminder
-
-# on:
-#   schedule:
-#     - cron: '0 9 * * *' # Run every day at 9am
-    
-#   workflow_dispatch:
-
-# jobs:
-#   remind:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/checkout@v2
-#     - name: Get PRs
-#       id: get_prs
-#       run: echo "::set-output name=prs::$(jq -c '.[] | select(.state == "open" and (.updated_at | fromdateiso8601) < (now - 86400)) | {number, title, url}' $GITHUB_EVENT_PATH)"
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#     - name: Post message to Slack
-#       uses: rtCamp/action-slack-notify@v2.2.0
-#       if: steps.get_prs.outputs.prs != ''
-#       with:
-#         slack_webhook: https://hooks.slack.com/services/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
-#         message: |
-#           The following PRs have been open for over a day:
-#           ${{ steps.get_prs.outputs.prs }}
-          
-          
 name: PR Reminder
 
 on:
   pull_request:
     types: [opened, reopened]
-
-  workflow_dispatch:
-
 
 jobs:
   reminder:
@@ -42,16 +11,50 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 14.x
+
+    - name: Install dependencies
+      run: npm install dayjs
+
     - name: Send reminder message
       env:
         SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        prAge=$(($(date +%s) - $(date -d "${GITHUB_EVENT_PULL_REQUEST_CREATED_AT}" +%s)))
-        prAgeMinutes=$(($prAge / 60))
+        const dayjs = require('dayjs');
+        const utc = require('dayjs/plugin/utc');
+        const timezone = require('dayjs/plugin/timezone');
+        dayjs.extend(utc);
+        dayjs.extend(timezone);
 
-        if [ $prAgeMinutes -ge 10 ]; then
-          message="Reminder: Pull request <${{ github.event.pull_request.html_url }}|#${{ github.event.pull_request.number }} ${GITHUB_EVENT_PULL_REQUEST_TITLE}> has been open for ${prAgeMinutes} minutes."
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" $SLACK_WEBHOOK_URL
-          echo "Sent reminder message: $message"
-        fi
+        const createdAt = process.env.GITHUB_EVENT_PULL_REQUEST_CREATED_AT;
+        const prUrl = process.env.GITHUB_EVENT_PULL_REQUEST_HTML_URL;
+        const prTitle = process.env.GITHUB_EVENT_PULL_REQUEST_TITLE;
+        const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
 
+        const now = dayjs.utc().tz('America/New_York');
+        const created = dayjs.utc(createdAt).tz('America/New_York');
+        const minutesOpen = now.diff(created, 'minute');
+
+        if (minutesOpen >= 10) {
+          const message = `Reminder: Pull request <${prUrl}|#${process.env.GITHUB_EVENT_NUMBER} ${prTitle}> has been open for ${minutesOpen} minutes.`;
+          const data = {
+            text: message
+          };
+          const options = {
+            method: 'POST',
+            headers: {
+              'Content-type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          };
+          fetch(slackWebhookUrl, options)
+            .then(() => {
+              console.log(`Sent reminder message: ${message}`);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
