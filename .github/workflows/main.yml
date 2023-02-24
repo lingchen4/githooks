@@ -46,8 +46,8 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        prAge=$(expr $(date +%s) - $(date -d $GITHUB_EVENT_PULL_REQUEST_CREATED_AT +%s))
-        prAgeMinutes=$(expr $prAge / 60)
+        prAge=$(($(date +%s) - $(date -d "${GITHUB_EVENT_PULL_REQUEST_CREATED_AT}" +%s)))
+        prAgeMinutes=$(($prAge / 60))
 
         if [ $prAgeMinutes -ge 10 ]; then
           message="Reminder: Pull request <${{ github.event.pull_request.html_url }}|#${{ github.event.pull_request.number }} ${GITHUB_EVENT_PULL_REQUEST_TITLE}> has been open for ${prAgeMinutes} minutes."
