@@ -1,0 +1,24 @@
+name: PR Reminder
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Run every day at 9am
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get PRs
+      id: get_prs
+      run: echo "::set-output name=prs::$(jq -c '.[] | select(.state == "open" and (.updated_at | fromdateiso8601) < (now - 86400)) | {number, title, url}' $GITHUB_EVENT_PATH)"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Post message to Slack
+      uses: rtCamp/action-slack-notify@v2.2.1
+      if: steps.get_prs.outputs.prs != ''
+      with:
+        slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+        message: |
+          The following PRs have been open for over a day:
+          ${{ steps.get_prs.outputs.prs }}
