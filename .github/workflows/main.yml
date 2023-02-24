@@ -25,6 +25,6 @@ jobs:
 
         if [[ ${minutes_open} -ge 10 ]]; then
           message="Reminder: Pull request <${pr_url}|#${GITHUB_EVENT_NUMBER} ${pr_title}> has been open for ${minutes_open} minutes."
-          curl -X POST --data-urlencode "payload={\"channel\": \"#test\", \"username\": \"webhookbot\", \"text\": \"This is posted to #test and comes from a bot named webhookbot.\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
+          curl -X POST --data-urlencode "payload={\"channel\": \"#test\", \"username\": \"webhookbot\", \"text\": \"This is posted to #test and comes from a bot named webhookbot.\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
           echo "Sent reminder message: ${message}"
         fi
