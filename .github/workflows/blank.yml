@@ -8,7 +8,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]name: Pull Request Reminder
+    branches: [ "main" ]main: Pull Request Reminder
 
 on:
   schedule:
