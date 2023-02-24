@@ -1,26 +1,57 @@
+# name: PR Reminder
+
+# on:
+#   schedule:
+#     - cron: '0 9 * * *' # Run every day at 9am
+    
+#   workflow_dispatch:
+
+# jobs:
+#   remind:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Get PRs
+#       id: get_prs
+#       run: echo "::set-output name=prs::$(jq -c '.[] | select(.state == "open" and (.updated_at | fromdateiso8601) < (now - 86400)) | {number, title, url}' $GITHUB_EVENT_PATH)"
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     - name: Post message to Slack
+#       uses: rtCamp/action-slack-notify@v2.2.0
+#       if: steps.get_prs.outputs.prs != ''
+#       with:
+#         slack_webhook: https://hooks.slack.com/services/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
+#         message: |
+#           The following PRs have been open for over a day:
+#           ${{ steps.get_prs.outputs.prs }}
+          
+          
 name: PR Reminder
 
 on:
-  schedule:
-    - cron: '0 9 * * *' # Run every day at 9am
-    
+  pull_request:
+    types: [opened, reopened]
+
   workflow_dispatch:
 
+
 jobs:
-  remind:
+  reminder:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Get PRs
-      id: get_prs
-      run: echo "::set-output name=prs::$(jq -c '.[] | select(.state == "open" and (.updated_at | fromdateiso8601) < (now - 86400)) | {number, title, url}' $GITHUB_EVENT_PATH)"
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Send reminder message
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Post message to Slack
-      uses: rtCamp/action-slack-notify@v2.2.0
-      if: steps.get_prs.outputs.prs != ''
-      with:
-        slack_webhook: https://hooks.slack.com/services/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
-        message: |
-          The following PRs have been open for over a day:
-          ${{ steps.get_prs.outputs.prs }}
+        SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
+      run: |
+        prAge=$(expr $(date +%s) - $(date -d $GITHUB_EVENT_PULL_REQUEST_CREATED_AT +%s))
+        prAgeMinutes=$(expr $prAge / 60)
+
+        if [ $prAgeMinutes -ge 10 ]; then
+          message="Reminder: Pull request <${{ github.event.pull_request.html_url }}|#${{ github.event.pull_request.number }} ${GITHUB_EVENT_PULL_REQUEST_TITLE}> has been open for ${prAgeMinutes} minutes."
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" $SLACK_WEBHOOK_URL
+          echo "Sent reminder message: $message"
+        fi
+
