@@ -14,51 +14,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        node-version: 14.x
+        python-version: 3.8
 
     - name: Install dependencies
-      run: npm install dayjs
+      run: |
+        python -m pip install --upgrade pip
+        pip install slack-sdk python-dateutil
 
     - name: Send reminder message
       env:
         SLACK_WEBHOOK_URL: https://hooks.slack.com/services/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
       run: |
-        const fetch = require('node-fetch');
-        const dayjs = require('dayjs');
-        const utc = require('dayjs/plugin/utc');
-        const timezone = require('dayjs/plugin/timezone');
-        dayjs.extend(utc);
-        dayjs.extend(timezone);
+        import os
+        import json
+        from slack_sdk import WebClient
+        from slack_sdk.errors import SlackApiError
+        from dateutil import parser
+        from datetime import datetime, timezone, timedelta
 
-        const createdAt = process.env.GITHUB_EVENT_PULL_REQUEST_CREATED_AT;
-        const prUrl = process.env.GITHUB_EVENT_PULL_REQUEST_HTML_URL;
-        const prTitle = process.env.GITHUB_EVENT_PULL_REQUEST_TITLE;
-        const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+        created_at = os.getenv('GITHUB_EVENT_PULL_REQUEST_CREATED_AT')
+        pr_url = os.getenv('GITHUB_EVENT_PULL_REQUEST_HTML_URL')
+        pr_title = os.getenv('GITHUB_EVENT_PULL_REQUEST_TITLE')
+        slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
 
-        const now = dayjs.utc().tz('America/New_York');
-        const created = dayjs.utc(createdAt).tz('America/New_York');
-        const minutesOpen = now.diff(created, 'minute');
+        now = datetime.now(timezone.utc)
+        created = parser.parse(created_at).replace(tzinfo=timezone.utc)
+        minutes_open = (now - created) // timedelta(minutes=1)
 
-        if (minutesOpen >= 10) {
-          const message = `Reminder: Pull request <${prUrl}|#${process.env.GITHUB_EVENT_NUMBER} ${prTitle}> has been open for ${minutesOpen} minutes.`;
-          const data = {
-            text: message
-          };
-          const options = {
-            method: 'POST',
-            headers: {
-              'Content-type': 'application/json'
-            },
-            body: JSON.stringify(data)
-          };
-          fetch(slackWebhookUrl, options)
-            .then(() => {
-              console.log(`Sent reminder message: ${message}`);
-            })
-            .catch((error) => {
-              console.error(error);
-            });
-        }
+        if minutes_open >= 10:
+            client = WebClient(token=slack_webhook_url)
+
+            message = f"Reminder: Pull request <{pr_url}|#{os.getenv('GITHUB_EVENT_NUMBER')} {pr_title}> has been open for {minutes_open} minutes."
+            try:
+                response = client.chat_postMessage(channel="#general", text=message)
+                print(f"Sent reminder message: {message}")
+            except SlackApiError as e:
+                print(f"Error sending reminder message: {e}")
