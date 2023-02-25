@@ -5,6 +5,8 @@ on:
     - cron: '0 9 * * 1-5' # Runs at 9am on weekdays
   pull_request_target:
     types: [opened, reopened]
+  workflow_dispatch:
+
 
 env:
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
