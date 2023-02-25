@@ -1,6 +1,6 @@
 name: slack-notification
 
-on: [push, pull_request, issues]
+on: [push, pull_request, issues, workflow_dispatch]
 
 jobs:
   slack-notifications:
@@ -12,7 +12,7 @@ jobs:
         id: notify
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          slack-channel: CPPUV5KU0
+          slack-channel: test
           slack-text: Hello! Event "${{ github.event_name }}" in "${{ github.repository }}" 🤓
       - name: Result from "Send Message"
         run: echo "The result was ${{ steps.notify.outputs.slack-result }}"
