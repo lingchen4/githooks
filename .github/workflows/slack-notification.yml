@@ -13,12 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x' # Use Python 3
-      - name: Install dependencies
-        run: pip install requests
       - name: Check for stale pull requests
         id: GetMessage
         run: |
