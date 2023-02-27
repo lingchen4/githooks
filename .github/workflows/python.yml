@@ -25,5 +25,5 @@ jobs:
             for pr in $stale_prs; do
               message="$message\n• $pr"
             done
-            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$message\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
+            curl -X POST -H 'Content-type: application/json' --data "payload={\"text\":\"$message\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
           fi
