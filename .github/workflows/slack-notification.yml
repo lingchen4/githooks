@@ -1,6 +1,10 @@
 name: slack-notification
 
-on: [push, pull_request, issues, workflow_dispatch]
+on:
+  schedule:
+    - cron: '0 9 * * *' # Run every day at 9am
+  workflow_dispatch:
+
 
 jobs:
   slack-notifications:
