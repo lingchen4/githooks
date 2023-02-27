@@ -1,4 +1,4 @@
-name: Pull Request Reminder
+name: Pull Request Reminder with nodejs
 
 on:
   schedule:
