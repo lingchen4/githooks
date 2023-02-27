@@ -26,5 +26,5 @@ jobs:
               message="$message\n• $pr"
               echo $message
             done
-            curl -X POST --data-urlencode "payload={\"channel\": \"#test\", \"username\": \"webhookbot\", \"text\": \"$message\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
+            curl -X POST --data-urlencode "payload={\"channel\": \"#test\", \"username\": \"webhookbot\", \"text\": \"$message\", \"icon_emoji\": \":ghost:\"}" ${{ secrets.SLACK_WEBHOOK_URL }}
           fi
