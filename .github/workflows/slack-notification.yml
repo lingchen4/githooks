@@ -17,6 +17,7 @@ jobs:
         id: GetMessage
         run: |
           stale_prs=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/pulls?state=open | jq '.[] | select((now - (.updated_at | fromdateiso8601 | tonumber)) > 600) | "- " + .title + " " + .html_url' | tr -d '"')
+
           if [ ! -z "$stale_prs" ]; then
             message="The following pull requests have been open for more than 10 minutes:"
             for pr in $stale_prs; do
