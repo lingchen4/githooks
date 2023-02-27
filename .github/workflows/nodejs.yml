@@ -3,6 +3,7 @@ name: Pull Request Reminder with nodejs
 on:
   schedule:
     - cron: '0 9 * * 1-5' # Remind on weekdays at 9am
+  workflow_dispatch:
 
 jobs:
   remind:
