@@ -22,7 +22,7 @@ jobs:
 
           echo $stale_prs
           if [ ! -z "$stale_prs" ]; then
-            message="The following pull requests have been open for more than 10 minutes in <https://${{ github.server_url }}/${{ github.repository }}|${GITHUB_REPOSITORY}>: \n $stale_prs"
+            message="The following pull requests have been open for more than 10 minutes in <${{ github.server_url }}/${{ github.repository }}|${GITHUB_REPOSITORY}>: \n $stale_prs"
             echo "message=$message" >> "$GITHUB_OUTPUT"
           fi
       - name: Send message to Slack API
