@@ -17,7 +17,7 @@ jobs:
         id: GetMessage
         run: |
           pull_requests=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/pulls?state=open)
-          stale_prs=$(echo $pull_requests | jq '.[] | select((now - (.updated_at | fromdateiso8601 | tonumber)) > 600) | "\(.title) <\(.html_url)>"')
+          stale_prs=$(echo $pull_requests | jq '.[] | select((now - (.updated_at | fromdateiso8601 | tonumber)) > 600) | "\(.title)<\(.html_url)>"')
           stale_prs=$(echo $stale_prs | tr -d '"')
 
           echo $stale_prs
