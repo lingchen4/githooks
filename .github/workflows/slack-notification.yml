@@ -31,4 +31,4 @@ jobs:
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: test
-          slack-text: "${{ steps.GetMessage.outputs.message }} @here"
+          slack-text: "${{ steps.GetMessage.outputs.message }} <@ling.duke>"
