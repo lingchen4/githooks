@@ -1,0 +1,57 @@
+name: Pull Request Reminder with nodejs
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5' # Remind on weekdays at 9am
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x' # Use Node.js 14
+      - name: Install dependencies
+        run: npm install @slack/webhook
+      - name: Check for stale pull requests
+        run: |
+          const { IncomingWebhook } = require('@slack/webhook');
+          const webhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
+          const octokit = require('@octokit/rest')();
+          octokit.authenticate({
+            type: 'token',
+            token: process.env.GITHUB_TOKEN,
+          });
+          octokit.pulls.list({
+            owner: process.env.GITHUB_REPOSITORY_OWNER,
+            repo: process.env.GITHUB_REPOSITORY_NAME,
+            state: 'open',
+          }).then((response) => {
+            const stalePullRequests = response.data.filter((pullRequest) => {
+              const updatedTime = Date.parse(pullRequest.updated_at);
+              const staleTime = new Date().getTime() - 600000; // 10 minutes in milliseconds
+              return updatedTime < staleTime;
+            });
+            if (stalePullRequests.length > 0) {
+              const message = stalePullRequests.map((pullRequest) => {
+                return `- ${pullRequest.html_url}`;
+              }).join('\n');
+              console.log(message);
+              webhook.send({
+                text: `The following pull requests have been open for more than 10 minutes:\n${message}`,
+              }).catch((error) => {
+                console.error('Error sending Slack webhook:', error);
+              });
+            }
+          }).catch((error) => {
+            console.error('Error getting pull requests:', error);
+          });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_NAME: ${{ github.repository_name }}

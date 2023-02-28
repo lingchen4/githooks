@@ -1,0 +1,28 @@
+name: PR reminder22
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5' # Runs at 9am on weekdays
+  pull_request_target:
+    types: [opened, reopened]
+  workflow_dispatch:
+
+
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install curl
+        run: sudo apt-get update && sudo apt-get install -y curl
+      - name: Get PR age in minutes
+        id: pr_age
+        run: echo "::set-output name=age::$(expr $(date +%s) - $(date -d $(jq -r '.pull_request.created_at' $GITHUB_EVENT_PATH) +%s)) / 60"
+      - name: Send reminder if PR age is greater than 10 minutes
+        if: ${{ steps.pr_age.outputs.age }} > 10
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data 'payload={"text": "Hey <!channel>, the PR <'${{ github.event.pull_request.html_url }}'|#${{ github.event.pull_request.number }} ${GITHUB_REPOSITORY}/${{ github.event.pull_request.head.ref }} (${github.event.pull_request.head.sha:0:7}}>) has been open for more than 10 minutes."}' $SLACK_WEBHOOK_URL

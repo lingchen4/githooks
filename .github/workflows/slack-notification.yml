@@ -1,0 +1,34 @@
+name: slack-notification
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5' # Remind on weekdays at 9am
+  workflow_dispatch:
+
+
+jobs:
+  slack-notifications:
+    runs-on: ubuntu-20.04
+    name: Sends a message to Slack when a push, a pull request or an issue is made
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Check for stale pull requests
+        id: GetMessage
+        run: |
+          pull_requests=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/pulls?state=open)
+          stale_prs=$(echo "$pull_requests" | jq '.[] | select((now - (.created_at | fromdateiso8601 | tonumber)) > 600) | "<\(.html_url)|\(.title)>\n"')
+          stale_prs=$(echo $stale_prs | tr -d '"')
+
+          echo $stale_prs
+          if [ ! -z "$stale_prs" ]; then
+            message="The following pull requests have been open for more than 10 minutes in <${{ github.server_url }}/${{ github.repository }}|${GITHUB_REPOSITORY}>: \n $stale_prs"
+            echo "message=$message" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Send message to Slack API
+        uses: archive/github-actions-slack@v2.0.0
+        id: notify
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: test
+          slack-text: "${{ steps.GetMessage.outputs.message }} <@ling.duke>"
